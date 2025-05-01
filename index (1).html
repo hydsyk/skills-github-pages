@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exchange Rate Calculator</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="number"] {
+            width: 200px;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        #summary {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Exchange Rate Calculator</h1>
+
+    <label for="exchangeRate1">Exchange Rate 1:</label>
+    <input type="number" id="exchangeRate1" placeholder="Enter exchange rate 1 (e.g., 1.116)" value="1.00" onkeydown="if (event.keyCode == 13) calculate()">
+
+    <label for="exchangeRate2">Exchange Rate 2:</label>
+    <input type="number" id="exchangeRate2" placeholder="Enter exchange rate 2 (e.g., 1.120)" value="1.00" onkeydown="if (event.keyCode == 13) calculate()">
+
+    <label for="startValue">Start Value:</label>
+    <input type="number" id="startValue" placeholder="Enter starting value" value="1.00" onkeydown="if (event.keyCode == 13) calculate()">
+
+    <label for="endValue">End Value:</label>
+    <input type="number" id="endValue" placeholder="Enter ending value" value="10.00" onkeydown="if (event.keyCode == 13) calculate()">
+
+    <button onclick="calculate()">Calculate</button>
+
+
+    <div id="summary">
+        <h2>Highest Actual Rate Summary</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Round-off</th>
+                    <th>Round-down</th>
+                    <th>Round-off</th>
+                    <th>Round-down</th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th colspan="2">Exchange Rate 1</th>
+                    <th colspan="2">Exchange Rate 2</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Actual Rate</td>
+                    <td id="roundOffRate1"></td>
+                    <td id="roundDownRate1"></td>
+                    <td id="roundOffRate2"></td>
+                    <td id="roundDownRate2"></td>
+                </tr>
+                <tr>
+                    <td>Source</td>
+                    <td id="roundOffSource1"></td>
+                    <td id="roundDownSource1"></td>
+                    <td id="roundOffSource2"></td>
+                    <td id="roundDownSource2"></td>
+                </tr>
+                <tr>
+                    <td>Target</td>
+                    <td id="roundOffTarget1"></td>
+                    <td id="roundDownTarget1"></td>
+                    <td id="roundOffTarget2"></td>
+                    <td id="roundDownTarget2"></td>
+                </tr>
+                <tr>
+                    <td>Inverse</td>
+                    <td id="roundOffInverse1"></td>
+                    <td id="roundDownInverse1"></td>
+                    <td id="roundOffInverse2"></td>
+                    <td id="roundDownInverse2"></td>
+                </tr>
+                <tr>
+                    <td>% Diff</td>
+                    <td id="roundOffDiff1"></td>
+                    <td id="roundDownDiff1"></td>
+                    <td id="roundOffDiff2"></td>
+                    <td id="roundDownDiff2"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <table id="resultsTable">
+        <thead>
+            <tr>
+                <th>Source</th>
+                <th>Target (Round-off) 1</th>
+                <th>Target (Round-down) 1</th>
+                <th>Actual Rate (Round-off) 1</th>
+                <th>Actual Rate (Round-down) 1</th>
+                <th>Target (Round-off) 2</th>
+                <th>Target (Round-down) 2</th>
+                <th>Actual Rate (Round-off) 2</th>
+                <th>Actual Rate (Round-down) 2</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+
+
+    <script>
+        function calculate() {
+            const exchangeRate1 = parseFloat(document.getElementById("exchangeRate1").value);
+            const exchangeRate2 = parseFloat(document.getElementById("exchangeRate2").value);
+            const startValue = parseFloat(document.getElementById("startValue").value);
+            const endValue = parseFloat(document.getElementById("endValue").value);
+
+            if (isNaN(exchangeRate1) || exchangeRate1 <= 0) {
+                alert("Exchange Rate 1 must be a positive number.");
+                return;
+            }
+            if (isNaN(exchangeRate2) || exchangeRate2 <= 0) {
+                alert("Exchange Rate 2 must be a positive number.");
+                return;
+            }
+            if (isNaN(startValue) || startValue <= 0) {
+                alert("Start Value must be a positive number.");
+                return;
+            }
+            if (isNaN(endValue) || endValue <= 0) {
+                alert("End Value must be a positive number.");
+                return;
+            }
+            if (startValue > endValue) {
+                alert("Start Value must be less than or equal to End Value.");
+                return;
+            }
+
+
+            let highestRoundOffRate1 = 0;
+            let highestRoundOffSource1 = 0;
+            let highestRoundOffTarget1 = 0;
+
+            let highestRoundDownRate1 = 0;
+            let highestRoundDownSource1 = 0;
+            let highestRoundDownTarget1 = 0;
+
+            let highestRoundOffRate2 = 0;
+            let highestRoundOffSource2 = 0;
+            let highestRoundOffTarget2 = 0;
+
+            let highestRoundDownRate2 = 0;
+            let highestRoundDownSource2 = 0;
+            let highestRoundDownTarget2 = 0;
+
+
+            let currentValue = startValue;
+            while (currentValue <= endValue) {
+                //Exchange Rate 1
+                const working1 = currentValue * exchangeRate1;
+                const targetRoundOff1 = Math.round(working1 * 100) / 100;
+                const targetRoundDown1 = Math.floor(working1 * 100) / 100;
+
+                const actualRateRoundOff1 = targetRoundOff1 / currentValue;
+                const actualRateRoundDown1 = targetRoundDown1 / currentValue;
+
+                 if (actualRateRoundOff1 > highestRoundOffRate1) {
+                    highestRoundOffRate1 = actualRateRoundOff1;
+                    highestRoundOffSource1 = currentValue;
+                    highestRoundOffTarget1 = targetRoundOff1;
+                }
+
+                if (actualRateRoundDown1 > highestRoundDownRate1) {
+                    highestRoundDownRate1 = actualRateRoundDown1;
+                    highestRoundDownSource1 = currentValue;
+                    highestRoundDownTarget1 = targetRoundDown1;
+                }
+
+                //Exchange Rate 2
+                const working2 = currentValue * exchangeRate2;
+                const targetRoundOff2 = Math.round(working2 * 100) / 100;
+                const targetRoundDown2 = Math.floor(working2 * 100) / 100;
+
+                const actualRateRoundOff2 = targetRoundOff2 / currentValue;
+                const actualRateRoundDown2 = targetRoundDown2 / currentValue;
+
+                 if (actualRateRoundOff2 > highestRoundOffRate2) {
+                    highestRoundOffRate2 = actualRateRoundOff2;
+                    highestRoundOffSource2 = currentValue;
+                    highestRoundOffTarget2 = targetRoundOff2;
+                }
+
+                if (actualRateRoundDown2 > highestRoundDownRate2) {
+                    highestRoundDownRate2 = actualRateRoundDown2;
+                    highestRoundDownSource2 = currentValue;
+                    highestRoundDownTarget2 = targetRoundDown2;
+                }
+
+                currentValue = currentValue + 0.01;
+                currentValue = Math.round(currentValue * 100) / 100; // avoid floating point precision issues
+            }
+
+            document.getElementById("roundOffRate1").innerText = highestRoundOffRate1.toFixed(4);
+            document.getElementById("roundOffSource1").innerText = highestRoundOffSource1.toFixed(2);
+            document.getElementById("roundOffTarget1").innerText = highestRoundOffTarget1.toFixed(2);
+            document.getElementById("roundOffInverse1").innerText = (1 / highestRoundOffRate1).toFixed(4);
+            document.getElementById("roundOffDiff1").innerText = ((highestRoundOffRate1 - exchangeRate1) / exchangeRate1 * 100).toFixed(2) + "%";
+
+            document.getElementById("roundDownRate1").innerText = highestRoundDownRate1.toFixed(4);
+            document.getElementById("roundDownSource1").innerText = highestRoundDownSource1.toFixed(2);
+            document.getElementById("roundDownTarget1").innerText = highestRoundDownTarget1.toFixed(2);
+            document.getElementById("roundDownInverse1").innerText = (1 / highestRoundDownRate1).toFixed(4);
+            document.getElementById("roundDownDiff1").innerText = ((highestRoundDownRate1 - exchangeRate1) / exchangeRate1 * 100).toFixed(2) + "%";
+
+            document.getElementById("roundOffRate2").innerText = highestRoundOffRate2.toFixed(4);
+            document.getElementById("roundOffSource2").innerText = highestRoundOffSource2.toFixed(2);
+            document.getElementById("roundOffTarget2").innerText = highestRoundOffTarget2.toFixed(2);
+            document.getElementById("roundOffInverse2").innerText = (1 / highestRoundOffRate2).toFixed(4);
+            document.getElementById("roundOffDiff2").innerText = ((highestRoundOffRate2 - exchangeRate2) / exchangeRate2 * 100).toFixed(2) + "%";
+
+            document.getElementById("roundDownRate2").innerText = highestRoundDownRate2.toFixed(4);
+            document.getElementById("roundDownSource2").innerText = highestRoundDownSource2.toFixed(2);
+            document.getElementById("roundDownTarget2").innerText = highestRoundDownTarget2.toFixed(2);
+            document.getElementById("roundDownInverse2").innerText = (1 / highestRoundDownRate2).toFixed(4);
+            document.getElementById("roundDownDiff2").innerText = ((highestRoundDownRate2 - exchangeRate2) / exchangeRate2 * 100).toFixed(2) + "%";
+
+            let resultsTableBody = document.getElementById("resultsTable").getElementsByTagName('tbody')[0];
+            resultsTableBody.innerHTML = ""; // Clear previous results
+             currentValue = startValue;
+            while (currentValue <= endValue) {
+                //Exchange Rate 1
+                const working1 = currentValue * exchangeRate1;
+                const targetRoundOff1 = Math.round(working1 * 100) / 100;
+                const targetRoundDown1 = Math.floor(working1 * 100) / 100;
+
+                const actualRateRoundOff1 = targetRoundOff1 / currentValue;
+                const actualRateRoundDown1 = targetRoundDown1 / currentValue;
+
+                //Exchange Rate 2
+                const working2 = currentValue * exchangeRate2;
+                const targetRoundOff2 = Math.round(working2 * 100) / 100;
+                const targetRoundDown2 = Math.floor(working2 * 100) / 100;
+
+                const actualRateRoundOff2 = targetRoundOff2 / currentValue;
+                const actualRateRoundDown2 = targetRoundDown2 / currentValue;
+
+
+                let row = resultsTableBody.insertRow();
+
+                let sourceCell = row.insertCell();
+                let targetRoundOffCell1 = row.insertCell();
+                let targetRoundDownCell1 = row.insertCell();
+                let actualRateRoundOffCell1 = row.insertCell();
+                let actualRateRoundDownCell1 = row.insertCell();
+                let targetRoundOffCell2 = row.insertCell();
+                let targetRoundDownCell2 = row.insertCell();
+                let actualRateRoundOffCell2 = row.insertCell();
+                let actualRateRoundDownCell2 = row.insertCell();
+
+                sourceCell.innerHTML = currentValue.toFixed(2);
+                targetRoundOffCell1.innerHTML = targetRoundOff1.toFixed(2);
+                targetRoundDownCell1.innerHTML = targetRoundDown1.toFixed(2);
+                actualRateRoundOffCell1.innerHTML = actualRateRoundOff1.toFixed(4);
+                actualRateRoundDownCell1.innerHTML = actualRateRoundDown1.toFixed(4);
+                targetRoundOffCell2.innerHTML = targetRoundOff2.toFixed(2);
+                targetRoundDownCell2.innerHTML = targetRoundDown2.toFixed(2);
+                actualRateRoundOffCell2.innerHTML = actualRateRoundOff2.toFixed(4);
+                actualRateRoundDownCell2.innerHTML = actualRateRoundDownCell2.toFixed(4);
+
+                currentValue = currentValue + 0.01;
+                currentValue = Math.round(currentValue * 100) / 100; // avoid floating point precision issues
+            }
+        }
+    </script>
+</body>
+</html>
